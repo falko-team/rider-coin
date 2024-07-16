@@ -1,6 +1,6 @@
 # Rider Coin
 
-> Rider Wallet is under active development. The underlying C# framework libraries is subject to change.
+> Rider Coin Wallet is under active development. The underlying C# bot is subject to change.
 
 Rider Coin is simple rated coin wallet bot for groups.
 

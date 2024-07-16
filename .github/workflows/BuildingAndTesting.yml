@@ -2,25 +2,25 @@ name: Building and Testing
 
 on:
   push:
-    branches-ignore: [ "main" ]
+    branches: [ "main" ]
   pull_request:
-    branches-ignore: [ "main" ]
+    branches: [ "main" ]
 
 jobs:
   build-test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Preparing
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
-    - name: Adding sources
-      run: dotnet nuget add source --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name falko-team "https://nuget.pkg.github.com/falko-team/index.json"
-    - name: Restoring
-      run: dotnet restore
-    - name: Building
-      run: dotnet build --no-restore
+      - uses: actions/checkout@v4
+      - name: Preparing
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Adding sources
+        run: dotnet nuget add source --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name falko-team "https://nuget.pkg.github.com/falko-team/index.json"
+      - name: Restoring
+        run: dotnet restore
+      - name: Building
+        run: dotnet build --no-restore
 #   TODO: Uncomment the following lines when we add tests
 #   - name: Testing
 #     run: dotnet test --verbosity normal
