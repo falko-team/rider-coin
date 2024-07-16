@@ -1,3 +1,4 @@
+using Talkie.Collections;
 using Talkie.Handlers;
 using Talkie.Models.Profiles;
 using Talkie.Pipelines;
@@ -99,5 +100,19 @@ public static class MessagesExtensions
         }
 
         return pipeline;
+    }
+
+    public static IReadOnlyList<string> GetCommandArguments(this ISignalContext<IncomingMessageSignal> context)
+    {
+        const char space = ' ';
+
+        return context
+            .Signal
+            .Message
+            .Text
+            ?.Trim()
+            .Split(space)
+            .Where(text => text.Length > 0)
+            .ToArray() ?? [];
     }
 }

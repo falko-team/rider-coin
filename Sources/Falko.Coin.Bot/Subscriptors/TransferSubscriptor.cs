@@ -42,9 +42,9 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
             return;
         }
 
-        var commandArguments = context.Signal.Message.Text?.Trim().Split(' ').Where(text => text.Length > 0).ToArray();
+        var commandArguments = context.GetCommandArguments();
 
-        if (commandArguments is null || commandArguments.Length < 2)
+        if (commandArguments.Count < 2)
         {
             logger.LogWarning($"User with {context.Signal.Message.SenderProfile.Identifier} has no command arguments");
 

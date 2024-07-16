@@ -23,10 +23,32 @@ public sealed class BalanceSubscriptor(IWalletsPool wallets, ILogger<BalanceSubs
     private async ValueTask SendProfileBalance(ISignalContext<IncomingMessageSignal> context,
         CancellationToken cancellationToken)
     {
-        if (context.TryGetWalletIdentifier(out var walletIdentifier, logger) is false)
+        var commandArguments = context.GetCommandArguments();
+
+        long walletIdentifier;
+
+        if (commandArguments.Count is 0)
         {
-            return;
+            if (context.TryGetWalletIdentifier(out walletIdentifier, logger) is false)
+            {
+                return;
+            }
         }
+        else
+        {
+            if (long.TryParse(commandArguments[0], out walletIdentifier) is false)
+            {
+                logger.LogWarning($"User with {context.Signal.Message.SenderProfile.Identifier} has no command arguments");
+
+                await context
+                    .ToMessageController()
+                    .PublishMessageAsync("Укажите правильный идентификатор кошелька",
+                        cancellationToken);
+
+                return;
+            }
+        }
+
 
         if (wallets.TryGet(walletIdentifier, out var wallet))
         {
