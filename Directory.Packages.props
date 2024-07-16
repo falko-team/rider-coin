@@ -1,0 +1,13 @@
+<Project>
+    <PropertyGroup Label="Versions">
+        <TalkieVersion>1.4.0</TalkieVersion>
+        <MicrosoftVersion>8.0.0</MicrosoftVersion>
+    </PropertyGroup>
+
+    <ItemGroup Label="Dependencies">
+        <PackageVersion Include="Falko.Talkie.Platforms.Telegram" Version="$(TalkieVersion)" />
+        <PackageVersion Include="Falko.Talkie.Core" Version="$(TalkieVersion)" />
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftVersion)" />
+        <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftVersion)" />
+    </ItemGroup>
+</Project>

@@ -1,0 +1,15 @@
+<Project>
+    <Import Project="Common.Build.props" />
+
+    <PropertyGroup Label="Assembly">
+        <OutputType>Library</OutputType>
+    </PropertyGroup>
+
+    <ItemGroup Label="Assets">
+        <None Include="../../License.md">
+            <Pack>true</Pack>
+            <Visible>false</Visible>
+            <PackagePath>Assets</PackagePath>
+        </None>
+    </ItemGroup>
+</Project>

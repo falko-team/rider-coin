@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sources", "Sources", "{56700474-BB4C-4A88-AC03-B84A498ED848}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Falko.Coin.Bot", "Sources\Falko.Coin.Bot\Falko.Coin.Bot.csproj", "{1381A06E-233F-43CD-B71B-8B29F2EBFF66}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Falko.Coin.Wallets", "Sources\Falko.Coin.Wallets\Falko.Coin.Wallets.csproj", "{0F32AAC8-803D-47C3-8D5E-94F4690C0CD1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Assets", "Assets", "{EFCF39BF-B9B0-4507-8DDA-94043D862675}"
+	ProjectSection(SolutionItems) = preProject
+	    .gitignore = .gitignore
+    	.gitattributes = .gitattributes
+		Common.Build.props = Common.Build.props
+		Directory.Packages.props = Directory.Packages.props
+		License.md = License.md
+		ReadMe.md = ReadMe.md
+		Sources.Build.props = Sources.Build.props
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1381A06E-233F-43CD-B71B-8B29F2EBFF66} = {56700474-BB4C-4A88-AC03-B84A498ED848}
+		{0F32AAC8-803D-47C3-8D5E-94F4690C0CD1} = {56700474-BB4C-4A88-AC03-B84A498ED848}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1381A06E-233F-43CD-B71B-8B29F2EBFF66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1381A06E-233F-43CD-B71B-8B29F2EBFF66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1381A06E-233F-43CD-B71B-8B29F2EBFF66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1381A06E-233F-43CD-B71B-8B29F2EBFF66}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F32AAC8-803D-47C3-8D5E-94F4690C0CD1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F32AAC8-803D-47C3-8D5E-94F4690C0CD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F32AAC8-803D-47C3-8D5E-94F4690C0CD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F32AAC8-803D-47C3-8D5E-94F4690C0CD1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
