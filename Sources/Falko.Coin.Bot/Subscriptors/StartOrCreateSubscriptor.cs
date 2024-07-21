@@ -4,7 +4,8 @@ using Talkie.Controllers;
 using Talkie.Flows;
 using Talkie.Handlers;
 using Talkie.Models.Profiles;
-using Talkie.Pipelines;
+using Talkie.Pipelines.Handling;
+using Talkie.Pipelines.Intercepting;
 using Talkie.Signals;
 
 namespace Falko.Coin.Bot.Subscriptors;
@@ -14,13 +15,13 @@ public sealed class StartOrCreateSubscriptor(IWalletsPool wallets, ILogger<Start
 {
     public void Subscribe(ISignalFlow flow)
     {
-        var skipOlderThanMinutePipeline = new SignalInterceptingPipelineBuilder<IncomingMessageSignal>()
+        var skipOlderThanMinutePipeline = SignalInterceptingPipelineBuilder<IncomingMessageSignal>.Empty
             .SkipOlderThan(TimeSpan.FromMinutes(1));
 
-        flow.Subscribe(skipOlderThanMinutePipeline, signals => signals
+        flow.Subscribe(skipOlderThanMinutePipeline
             .Where(signal => signal.Message.EnvironmentProfile is IUserProfile)
             .OnlyCommand("start", logger)
-            .Merge(skipOlderThanMinutePipeline, mergingSignals => mergingSignals
+            .Merge(skipOlderThanMinutePipeline
                 .Where(signal => signal.Message.EnvironmentProfile is not IUserProfile)
                 .OnlyCommand("create", logger))
             .HandleAsync(TryCreateProfileWallet));

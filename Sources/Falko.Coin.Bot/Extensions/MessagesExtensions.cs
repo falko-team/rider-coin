@@ -1,7 +1,6 @@
-using Talkie.Collections;
 using Talkie.Handlers;
 using Talkie.Models.Profiles;
-using Talkie.Pipelines;
+using Talkie.Pipelines.Intercepting;
 using Talkie.Signals;
 using Talkie.Validations;
 
@@ -95,7 +94,7 @@ public static class MessagesExtensions
 
         if (logger is not null)
         {
-            pipeline.Do(signal => logger
+            pipeline = pipeline.Do(signal => logger
                 .LogDebug($"User with {signal.Message.SenderProfile.Identifier} invoked command /{name}"));
         }
 

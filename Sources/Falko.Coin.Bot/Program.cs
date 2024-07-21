@@ -6,7 +6,7 @@ using Falko.Coin.Wallets.Storages;
 using Talkie.Collections;
 using Talkie.Disposables;
 using Talkie.Flows;
-using Talkie.Pipelines;
+using Talkie.Pipelines.Handling;
 
 // preparing
 await using var disposables = new DisposableStack();

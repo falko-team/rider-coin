@@ -3,7 +3,7 @@ using Falko.Coin.Wallets.Services;
 using Talkie.Controllers;
 using Talkie.Flows;
 using Talkie.Handlers;
-using Talkie.Pipelines;
+using Talkie.Pipelines.Handling;
 using Talkie.Signals;
 
 namespace Falko.Coin.Bot.Subscriptors;

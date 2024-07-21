@@ -4,7 +4,7 @@ using Talkie.Concurrent;
 using Talkie.Flows;
 using Talkie.Handlers;
 using Talkie.Models.Messages;
-using Talkie.Pipelines;
+using Talkie.Pipelines.Handling;
 using Talkie.Signals;
 
 namespace Falko.Coin.Bot.Subscriptors;
