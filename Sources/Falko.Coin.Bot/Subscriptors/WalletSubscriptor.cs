@@ -15,7 +15,7 @@ public sealed class WalletSubscriptor(IWalletsPool wallets, ILogger<BalanceSubsc
     {
         flow.Subscribe<IncomingMessageSignal>(signals => signals
             .SkipOlderThan(TimeSpan.FromMinutes(1))
-            .OnlyCommand("wallet", logger)
+            .SelectOnlyCommand("wallet", logger)
             .HandleAsync(SendProfileWallet));
     }
 

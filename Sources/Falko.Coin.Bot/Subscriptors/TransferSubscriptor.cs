@@ -18,7 +18,7 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
     {
         flow.Subscribe<IncomingMessageSignal>(signals => signals
             .SkipOlderThan(TimeSpan.FromMinutes(1))
-            .OnlyCommand("transfer")
+            .SelectOnlyCommand("transfer")
             .Do(signal => logger.LogInformation($"Transfer command text: {signal.Message.Text}"))
             .HandleAsync(TryTransferProfileWalletAmountToOther));
     }

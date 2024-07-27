@@ -1,5 +1,6 @@
 using Falko.Coin.Bot.Extensions;
 using Falko.Coin.Wallets.Services;
+using Talkie.Common;
 using Talkie.Controllers;
 using Talkie.Flows;
 using Talkie.Handlers;
@@ -15,15 +16,18 @@ public sealed class StartOrCreateSubscriptor(IWalletsPool wallets, ILogger<Start
 {
     public void Subscribe(ISignalFlow flow)
     {
-        var skipOlderThanMinutePipeline = SignalInterceptingPipelineBuilder<IncomingMessageSignal>.Empty
-            .SkipOlderThan(TimeSpan.FromMinutes(1));
-
-        flow.Subscribe(skipOlderThanMinutePipeline
-            .Where(signal => signal.Message.EnvironmentProfile is IUserProfile)
-            .OnlyCommand("start", logger)
-            .Merge(skipOlderThanMinutePipeline
-                .Where(signal => signal.Message.EnvironmentProfile is not IUserProfile)
-                .OnlyCommand("create", logger))
+        flow.Subscribe<IncomingMessageSignal>(signals => signals
+            .SkipOlderThan(TimeSpan.FromMinutes(1))
+            .Merge
+            (
+                mergeSignals => mergeSignals
+                    .Where(signal => signal.Message.EnvironmentProfile is IUserProfile)
+                    .SelectOnlyCommand("start", logger),
+                mergeSignals => mergeSignals
+                    .Where(signal => signal.Message.EnvironmentProfile is not IUserProfile)
+                    .SelectOnlyCommand("create", logger)
+            )
+            .Where(signal => signal.Message.Text.IsNullOrEmpty())
             .HandleAsync(TryCreateProfileWallet));
     }
 

@@ -27,7 +27,7 @@ public static class MessagesExtensions
         return builder.Where(signal => signal.Message.Received - signal.Message.Sent <= spreadTimeSpan);
     }
 
-    public static ISignalInterceptingPipelineBuilder<IncomingMessageSignal> OnlyCommand(this ISignalInterceptingPipelineBuilder<IncomingMessageSignal> builder,
+    public static ISignalInterceptingPipelineBuilder<IncomingMessageSignal> SelectOnlyCommand(this ISignalInterceptingPipelineBuilder<IncomingMessageSignal> builder,
         string name,
         ILogger? logger = null)
     {

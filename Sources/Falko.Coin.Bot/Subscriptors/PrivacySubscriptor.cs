@@ -22,7 +22,7 @@ public sealed class PrivacySubscriptor(ILogger<PrivacySubscriptor> logger) : ISu
     {
         flow.Subscribe<IncomingMessageSignal>(signals => signals
             .SkipOlderThan(TimeSpan.FromSeconds(30))
-            .OnlyCommand("privacy", logger)
+            .SelectOnlyCommand("privacy", logger)
             .HandleAsync((context, cancellationToken) => context
                 .ToMessageController()
                 .PublishMessageAsync(_cachedPrivacyMessage, cancellationToken)
