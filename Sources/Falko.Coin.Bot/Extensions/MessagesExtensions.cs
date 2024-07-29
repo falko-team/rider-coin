@@ -1,3 +1,4 @@
+using Falko.Coin.Bot.Localizations;
 using Talkie.Handlers;
 using Talkie.Models.Profiles;
 using Talkie.Pipelines.Intercepting;
@@ -113,5 +114,16 @@ public static class MessagesExtensions
             .Split(space)
             .Where(text => text.Length > 0)
             .ToArray() ?? [];
+    }
+
+    public static ILocalization GetLocalization(this ISignalContext<IncomingMessageSignal> context)
+    {
+        return context.Signal.Message.SenderProfile.Language switch
+        {
+            "en" => LocalizationProvider.English,
+            "ru" or "be" => LocalizationProvider.Russian,
+            "uk" => LocalizationProvider.Ukrainian,
+            _ => LocalizationProvider.Default
+        };
     }
 }

@@ -5,8 +5,6 @@ namespace Falko.Coin.Bot.Configurations;
 
 public static class BotConfiguration
 {
-    public const string CoinName = "\ud83e\ude99";
-
     public static string GetTelegramBotToken()
     {
         var token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN");

@@ -1,4 +1,3 @@
-using Falko.Coin.Bot.Configurations;
 using Falko.Coin.Bot.Extensions;
 using Falko.Coin.Wallets.Services;
 using Falko.Coin.Wallets.Transactions;
@@ -19,7 +18,7 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
         flow.Subscribe<IncomingMessageSignal>(signals => signals
             .SkipOlderThan(TimeSpan.FromMinutes(1))
             .SelectOnlyCommand("transfer")
-            .Do(signal => logger.LogInformation($"Transfer command text: {signal.Message.Text}"))
+            .Do(signal => logger.LogDebug($"Transfer command text: {signal.Message.Text}"))
             .HandleAsync(TryTransferProfileWalletAmountToOther));
     }
 
@@ -37,8 +36,10 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
 
             await context
                 .ToMessageController()
-                .PublishMessageAsync("У вас нет кошелька",
-                    cancellationToken);
+                .PublishMessageAsync(context
+                    .GetLocalization()
+                    .WalletIsMissing
+                    .WithSenderProfileUser(context), cancellationToken);
 
             return;
         }
@@ -51,8 +52,9 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
 
             await context
                 .ToMessageController()
-                .PublishMessageAsync("Укажите сумму и идентификатор кошелька получателя",
-                    cancellationToken);
+                .PublishMessageAsync(context
+                    .GetLocalization()
+                    .RequiredAmountAndWalletAddress, cancellationToken);
 
             return;
         }
@@ -63,8 +65,10 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
 
             await context
                 .ToMessageController()
-                .PublishMessageAsync("Укажите корректную сумму",
-                    cancellationToken);
+                .PublishMessageAsync(context
+                    .GetLocalization()
+                    .WalletIsMissing
+                    .WithAmount(commandArguments[0]), cancellationToken);
 
             return;
         }
@@ -75,8 +79,10 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
 
             await context
                 .ToMessageController()
-                .PublishMessageAsync("Укажите корректный идентификатор кошелька получателя",
-                    cancellationToken);
+                .PublishMessageAsync(context
+                    .GetLocalization()
+                    .WalletAddressIsInvalid
+                    .WithAddress(commandArguments[1]), cancellationToken);
 
             return;
         }
@@ -87,8 +93,10 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
 
             await context
                 .ToMessageController()
-                .PublishMessageAsync("Кошелек получателя не найден",
-                    cancellationToken);
+                .PublishMessageAsync(context
+                    .GetLocalization()
+                    .WalletAddressIsMissing
+                    .WithAddress(recipientWalletIdentifier), cancellationToken);
 
             return;
         }
@@ -99,25 +107,41 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
 
             await context
                 .ToMessageController()
-                .PublishMessageAsync("Недостаточно средств",
-                    cancellationToken);
+                .PublishMessageAsync(context
+                    .GetLocalization()
+                    .WalletBalanceTooLow
+                    .WithSenderProfileUser(context), cancellationToken);
 
             return;
         }
+
+        await context
+            .ToMessageController()
+            .PublishMessageAsync(context
+                .GetLocalization()
+                .TransactionProcessing
+                .WithSenderProfileUser(context), cancellationToken);
 
         logger.LogInformation($"User with {context.Signal.Message.SenderProfile.Identifier} transferred {amount} to {recipientWallet.Identifier}");
 
         await context
             .ToMessageController()
-            .PublishMessageAsync($"Вы перевели {amount} {BotConfiguration.CoinName} на кошелек {recipientWallet.Identifier}",
-                cancellationToken);
+            .PublishMessageAsync(context
+                .GetLocalization()
+                .TransactionProcessed
+                .WithSenderProfileUser(context)
+                .WithWalletAddress(recipientWallet)
+                .WithAmount(amount), cancellationToken);
 
         try
         {
             await context
                 .CreateMessageController(walletIdentifier)
-                .PublishMessageAsync($"C вашего кошелька списано {amount} {BotConfiguration.CoinName} на кошелек {recipientWallet.Identifier}",
-                    cancellationToken);
+                .PublishMessageAsync(context
+                    .GetLocalization()
+                    .TransactionSent
+                    .WithWalletAddress(recipientWallet)
+                    .WithAmount(amount), cancellationToken);
         }
         catch (Exception exception)
         {
@@ -128,8 +152,11 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
         {
             await context
                 .CreateMessageController(recipientWalletIdentifier)
-                .PublishMessageAsync($"На ваш кошелек поступило {amount} {BotConfiguration.CoinName} от кошелька {wallet.Identifier}",
-                    cancellationToken);
+                .PublishMessageAsync(context
+                    .GetLocalization()
+                    .TransactionReceived
+                    .WithWalletAddress(recipientWallet)
+                    .WithAmount(amount), cancellationToken);
         }
         catch (Exception exception)
         {

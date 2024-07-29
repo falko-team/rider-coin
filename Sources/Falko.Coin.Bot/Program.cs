@@ -16,7 +16,7 @@ var collection = new ServiceCollection();
 
 collection.AddLogging(builder => builder
     .AddSimpleConsole(options => options.SingleLine = true)
-    .SetMinimumLevel(LogLevel.Trace));
+    .SetMinimumLevel(LogLevel.Debug));
 
 collection.AddSingleton<IWalletsStorage, WalletsStorage>(_ => new WalletsStorage(BotConfiguration.GetWalletsStorageDirectory()));
 collection.AddSingleton<IWalletsPool, WalletsPool>();
@@ -41,7 +41,7 @@ var flow = new SignalFlow()
 var unobservedExceptionTask = flow.TakeUnobservedExceptionAsync();
 
 flow.Subscribe(signals => signals
-    .Handle(context => logger.LogTrace(context.Signal.ToString())));
+    .Handle(context => logger.LogInformation(context.Signal.ToString())));
 
 flow.Subscribe<TransferSubscriptor>(provider);
 flow.Subscribe<BalanceSubscriptor>(provider);

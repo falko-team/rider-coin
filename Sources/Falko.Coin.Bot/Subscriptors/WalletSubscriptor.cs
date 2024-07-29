@@ -33,8 +33,11 @@ public sealed class WalletSubscriptor(IWalletsPool wallets, ILogger<BalanceSubsc
 
             await context
                 .ToMessageController()
-                .PublishMessageAsync($"Номер вашего кошелька - {wallet.Identifier}",
-                    cancellationToken);
+                .PublishMessageAsync(context
+                    .GetLocalization()
+                    .WalletIsMissing
+                    .WithSenderProfileUser(context)
+                    .WithWalletAddress(wallet), cancellationToken);
         }
         else
         {
@@ -42,8 +45,10 @@ public sealed class WalletSubscriptor(IWalletsPool wallets, ILogger<BalanceSubsc
 
             await context
                 .ToMessageController()
-                .PublishMessageAsync("У вас нет кошелька",
-                    cancellationToken);
+                .PublishMessageAsync(context
+                    .GetLocalization()
+                    .WalletIsMissing
+                    .WithSenderProfileUser(context), cancellationToken);
         }
     }
 }

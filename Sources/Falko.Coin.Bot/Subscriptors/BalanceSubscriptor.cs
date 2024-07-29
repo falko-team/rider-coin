@@ -1,10 +1,10 @@
-using Falko.Coin.Bot.Configurations;
 using Falko.Coin.Bot.Extensions;
 using Falko.Coin.Wallets.Services;
 using Talkie.Controllers;
 using Talkie.Flows;
 using Talkie.Handlers;
 using Talkie.Pipelines.Handling;
+using Talkie.Pipelines.Intercepting;
 using Talkie.Signals;
 
 namespace Falko.Coin.Bot.Subscriptors;
@@ -17,38 +17,17 @@ public sealed class BalanceSubscriptor(IWalletsPool wallets, ILogger<BalanceSubs
         flow.Subscribe<IncomingMessageSignal>(signals => signals
             .SkipOlderThan(TimeSpan.FromMinutes(1))
             .SelectOnlyCommand("balance", logger)
+            .Do(signal => logger.LogDebug($"Balance command text: {signal.Message.Text}"))
             .HandleAsync(SendProfileBalance));
     }
 
     private async ValueTask SendProfileBalance(ISignalContext<IncomingMessageSignal> context,
         CancellationToken cancellationToken)
     {
-        var commandArguments = context.GetCommandArguments();
-
-        long walletIdentifier;
-
-        if (commandArguments.Count is 0)
+        if (context.TryGetWalletIdentifier(out var walletIdentifier, logger) is false)
         {
-            if (context.TryGetWalletIdentifier(out walletIdentifier, logger) is false)
-            {
-                return;
-            }
+            return;
         }
-        else
-        {
-            if (long.TryParse(commandArguments[0], out walletIdentifier) is false)
-            {
-                logger.LogWarning($"User with {context.Signal.Message.SenderProfile.Identifier} has no command arguments");
-
-                await context
-                    .ToMessageController()
-                    .PublishMessageAsync("Укажите правильный идентификатор кошелька",
-                        cancellationToken);
-
-                return;
-            }
-        }
-
 
         if (wallets.TryGet(walletIdentifier, out var wallet))
         {
@@ -56,8 +35,11 @@ public sealed class BalanceSubscriptor(IWalletsPool wallets, ILogger<BalanceSubs
 
             await context
                 .ToMessageController()
-                .PublishMessageAsync($"Ваш баланс - {wallet.Balance} {BotConfiguration.CoinName}",
-                    cancellationToken);
+                .PublishMessageAsync(context
+                    .GetLocalization()
+                    .WalletBalance
+                    .WithWalletBalance(wallet)
+                    .WithSenderProfileUser(context), cancellationToken);
         }
         else
         {
@@ -65,8 +47,10 @@ public sealed class BalanceSubscriptor(IWalletsPool wallets, ILogger<BalanceSubs
 
             await context
                 .ToMessageController()
-                .PublishMessageAsync("У вас нет кошелька",
-                    cancellationToken);
+                .PublishMessageAsync(context
+                    .GetLocalization()
+                    .WalletIsMissing
+                    .WithSenderProfileUser(context), cancellationToken);
         }
     }
 }

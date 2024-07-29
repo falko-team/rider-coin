@@ -24,7 +24,6 @@ public sealed class StartOrCreateSubscriptor(IWalletsPool wallets, ILogger<Start
                     .Where(signal => signal.Message.EnvironmentProfile is IUserProfile)
                     .SelectOnlyCommand("start", logger),
                 mergeSignals => mergeSignals
-                    .Where(signal => signal.Message.EnvironmentProfile is not IUserProfile)
                     .SelectOnlyCommand("create", logger)
             )
             .Where(signal => signal.Message.Text.IsNullOrEmpty())
@@ -45,8 +44,10 @@ public sealed class StartOrCreateSubscriptor(IWalletsPool wallets, ILogger<Start
 
             await context
                 .ToMessageController()
-                .PublishMessageAsync(message => message
-                    .AddTextLine("У вас уже есть кошелек"), cancellationToken);
+                .PublishMessageAsync(context
+                    .GetLocalization()
+                    .WalletIsExists
+                    .WithWalletAddress(wallet), cancellationToken);
         }
         else
         {
@@ -65,8 +66,11 @@ public sealed class StartOrCreateSubscriptor(IWalletsPool wallets, ILogger<Start
 
             await context
                 .ToMessageController()
-                .PublishMessageAsync("Ваш кошелек создан",
-                    cancellationToken);
+                .PublishMessageAsync(context
+                    .GetLocalization()
+                    .WalletIsCreated
+                    .WithWalletAddress(wallet!)
+                    .WithSenderProfileUser(context), cancellationToken);
         }
     }
 }
