@@ -8,8 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Falko.Coin.Wallets", "Sourc
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Assets", "Assets", "{EFCF39BF-B9B0-4507-8DDA-94043D862675}"
 	ProjectSection(SolutionItems) = preProject
-	    .gitignore = .gitignore
-    	.gitattributes = .gitattributes
+        .gitignore = .gitignore
+        .gitattributes = .gitattributes
 		Common.Build.props = Common.Build.props
 		Directory.Packages.props = Directory.Packages.props
 		License.md = License.md
