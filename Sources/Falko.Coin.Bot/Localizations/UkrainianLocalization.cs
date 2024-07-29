@@ -38,7 +38,7 @@ public sealed class UkrainianLocalization : ILocalization
         $"Транзакція користувача {StringMetadata.User} обробляється";
 
     public StringWithMetadataBuilder TransactionProcessed =>
-        $"Користувач {StringMetadata.User} переказав {StringMetadata.Amount} {StringMetadata.Coin} на гаманець {StringMetadata.Address}";
+        $"Користувач {StringMetadata.User} переказав(ла) {StringMetadata.Amount} {StringMetadata.Coin} на гаманець {StringMetadata.Address}";
 
     public StringWithMetadataBuilder TransactionReceived =>
         $"Ви отримали {StringMetadata.Amount} {StringMetadata.Coin} від гаманця {StringMetadata.Address}";

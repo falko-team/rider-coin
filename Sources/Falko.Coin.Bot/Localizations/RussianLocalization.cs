@@ -38,7 +38,7 @@ public sealed class RussianLocalization : ILocalization
         $"Транзакция пользователя {StringMetadata.User} обрабатывается";
 
     public StringWithMetadataBuilder TransactionProcessed =>
-        $"Пользователь {StringMetadata.User} перевел {StringMetadata.Amount} {StringMetadata.Coin} на кошелек {StringMetadata.Address}";
+        $"Пользователь {StringMetadata.User} перевел(а) {StringMetadata.Amount} {StringMetadata.Coin} на кошелек {StringMetadata.Address}";
 
     public StringWithMetadataBuilder TransactionReceived =>
         $"Вы получили {StringMetadata.Amount} {StringMetadata.Coin} от кошелька {StringMetadata.Address}";
