@@ -4,6 +4,7 @@ using Falko.Coin.Wallets.Transactions;
 using Talkie.Controllers;
 using Talkie.Flows;
 using Talkie.Handlers;
+using Talkie.Pipelines;
 using Talkie.Pipelines.Handling;
 using Talkie.Pipelines.Intercepting;
 using Talkie.Signals;
@@ -35,11 +36,11 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
             logger.LogWarning($"User with {context.Signal.Message.SenderProfile.Identifier} has no wallet");
 
             await context
-                .ToMessageController()
+                .ToOutgoingMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletIsMissing
-                    .WithSenderProfileUser(context), cancellationToken);
+                    .WithSenderProfileUser(context), cancellationToken: cancellationToken);
 
             return;
         }
@@ -51,10 +52,10 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
             logger.LogWarning($"User with {context.Signal.Message.SenderProfile.Identifier} has no command arguments");
 
             await context
-                .ToMessageController()
+                .ToOutgoingMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
-                    .RequiredAmountAndWalletAddress, cancellationToken);
+                    .RequiredAmountAndWalletAddress, cancellationToken: cancellationToken);
 
             return;
         }
@@ -64,11 +65,11 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
             logger.LogWarning($"User with {context.Signal.Message.SenderProfile.Identifier} has invalid amount");
 
             await context
-                .ToMessageController()
+                .ToOutgoingMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletIsMissing
-                    .WithAmount(commandArguments[0]), cancellationToken);
+                    .WithAmount(commandArguments[0]), cancellationToken: cancellationToken);
 
             return;
         }
@@ -78,11 +79,11 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
             logger.LogWarning($"User with {context.Signal.Message.SenderProfile.Identifier} has invalid recipient wallet identifier");
 
             await context
-                .ToMessageController()
+                .ToOutgoingMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletAddressIsInvalid
-                    .WithAddress(commandArguments[1]), cancellationToken);
+                    .WithAddress(commandArguments[1]), cancellationToken: cancellationToken);
 
             return;
         }
@@ -92,11 +93,11 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
             logger.LogWarning($"User with {context.Signal.Message.SenderProfile.Identifier} has no recipient wallet");
 
             await context
-                .ToMessageController()
+                .ToOutgoingMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletAddressIsMissing
-                    .WithAddress(recipientWalletIdentifier), cancellationToken);
+                    .WithAddress(recipientWalletIdentifier), cancellationToken: cancellationToken);
 
             return;
         }
@@ -106,42 +107,42 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
             logger.LogWarning($"User with {context.Signal.Message.SenderProfile.Identifier} has not enough money");
 
             await context
-                .ToMessageController()
+                .ToOutgoingMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletBalanceTooLow
-                    .WithSenderProfileUser(context), cancellationToken);
+                    .WithSenderProfileUser(context), cancellationToken: cancellationToken);
 
             return;
         }
 
         await context
-            .ToMessageController()
+            .ToOutgoingMessageController()
             .PublishMessageAsync(context
                 .GetLocalization()
                 .TransactionProcessing
-                .WithSenderProfileUser(context), cancellationToken);
+                .WithSenderProfileUser(context), cancellationToken: cancellationToken);
 
         logger.LogInformation($"User with {context.Signal.Message.SenderProfile.Identifier} transferred {amount} to {recipientWallet.Identifier}");
 
         await context
-            .ToMessageController()
+            .ToOutgoingMessageController()
             .PublishMessageAsync(context
                 .GetLocalization()
                 .TransactionProcessed
                 .WithSenderProfileUser(context)
                 .WithWalletAddress(recipientWallet)
-                .WithAmount(amount), cancellationToken);
+                .WithAmount(amount), cancellationToken: cancellationToken);
 
         try
         {
             await context
-                .CreateMessageController(walletIdentifier)
+                .GetOutgoingMessageController(walletIdentifier)
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .TransactionSent
                     .WithWalletAddress(recipientWallet)
-                    .WithAmount(amount), cancellationToken);
+                    .WithAmount(amount), cancellationToken: cancellationToken);
         }
         catch (Exception exception)
         {
@@ -151,12 +152,12 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
         try
         {
             await context
-                .CreateMessageController(recipientWalletIdentifier)
+                .GetOutgoingMessageController(recipientWalletIdentifier)
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .TransactionReceived
                     .WithWalletAddress(recipientWallet)
-                    .WithAmount(amount), cancellationToken);
+                    .WithAmount(amount), cancellationToken: cancellationToken);
         }
         catch (Exception exception)
         {

@@ -3,6 +3,7 @@ using Talkie.Concurrent;
 using Talkie.Controllers;
 using Talkie.Flows;
 using Talkie.Handlers;
+using Talkie.Pipelines;
 using Talkie.Pipelines.Handling;
 using Talkie.Signals;
 
@@ -17,12 +18,12 @@ public sealed class PrivacySubscriptor(ILogger<PrivacySubscriptor> logger) : ISu
             .SkipOlderThan(TimeSpan.FromSeconds(30))
             .SelectOnlyCommand("privacy", logger)
             .HandleAsync((context, cancellationToken) => context
-                .ToMessageController()
+                .ToOutgoingMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .BotPrivacyPolicy
                     .WithSenderProfileUser(context)
-                    .WithEnvironmentProfileBot(context), cancellationToken)
+                    .WithEnvironmentProfileBot(context), cancellationToken: cancellationToken)
                 .AsValueTask()));
     }
 }

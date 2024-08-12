@@ -5,6 +5,7 @@ using Talkie.Controllers;
 using Talkie.Flows;
 using Talkie.Handlers;
 using Talkie.Models.Profiles;
+using Talkie.Pipelines;
 using Talkie.Pipelines.Handling;
 using Talkie.Pipelines.Intercepting;
 using Talkie.Signals;
@@ -43,11 +44,11 @@ public sealed class StartOrCreateSubscriptor(IWalletsPool wallets, ILogger<Start
             logger.LogInformation($"User with {context.Signal.Message.SenderProfile.Identifier} has wallet with identifier {wallet.Identifier}");
 
             await context
-                .ToMessageController()
+                .ToOutgoingMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletIsExists
-                    .WithWalletAddress(wallet), cancellationToken);
+                    .WithWalletAddress(wallet), cancellationToken: cancellationToken);
         }
         else
         {
@@ -65,12 +66,12 @@ public sealed class StartOrCreateSubscriptor(IWalletsPool wallets, ILogger<Start
             logger.LogInformation($"Created wallet with user identifier {walletIdentifier}");
 
             await context
-                .ToMessageController()
+                .ToOutgoingMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletIsCreated
                     .WithWalletAddress(wallet!)
-                    .WithSenderProfileUser(context), cancellationToken);
+                    .WithSenderProfileUser(context), cancellationToken: cancellationToken);
         }
     }
 }

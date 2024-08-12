@@ -1,5 +1,7 @@
 using Falko.Coin.Bot.Localizations;
 using Talkie.Handlers;
+using Talkie.Localizations;
+using Talkie.Models.Messages;
 using Talkie.Models.Profiles;
 using Talkie.Pipelines.Intercepting;
 using Talkie.Signals;
@@ -22,12 +24,6 @@ public static class MessagesExtensions
         return result;
     }
 
-    public static ISignalInterceptingPipelineBuilder<IncomingMessageSignal> SkipOlderThan(this ISignalInterceptingPipelineBuilder<IncomingMessageSignal> builder,
-        TimeSpan spreadTimeSpan)
-    {
-        return builder.Where(signal => signal.Message.Received - signal.Message.Sent <= spreadTimeSpan);
-    }
-
     public static ISignalInterceptingPipelineBuilder<IncomingMessageSignal> SelectOnlyCommand(this ISignalInterceptingPipelineBuilder<IncomingMessageSignal> builder,
         string name,
         ILogger? logger = null)
@@ -48,18 +44,20 @@ public static class MessagesExtensions
             if (messageText.Length == commandName.Length)
             {
                 return messageText == commandName
-                    ? signal.MutateMessage(message => message
-                        .MutateText(_ => null))
+                    ? signal.Message.Mutate(message => message
+                            .MutateText(_ => null))
+                        .ToSignal()
                     : false;
             }
 
             if (messageText[commandName.Length] == ' ' && messageText.StartsWith(commandName))
             {
-                return signal.MutateMessage(message => message
-                    .MutateText(text => text
-                        ?.TrimStart()
-                        .Substring(commandName.Length)
-                        .TrimStart()));
+                return signal.Message.Mutate(message => message
+                        .MutateText(text => text
+                            ?.TrimStart()
+                            .Substring(commandName.Length)
+                            .TrimStart()))
+                    .ToSignal();
             }
 
             if ((signal.Message.ReceiverProfile as IBotProfile)?.NickName is not { } nickName)
@@ -79,17 +77,19 @@ public static class MessagesExtensions
             if (messageText.Length == commandBotName.Length)
             {
                 return messageText == commandBotName
-                    ? signal.MutateMessage(message => message
-                        .MutateText(_ => null))
+                    ? signal.Message.Mutate(message => message
+                            .MutateText(_ => null))
+                        .ToSignal()
                     : false;
             }
 
             return messageText[commandBotName.Length] == ' ' && messageText.StartsWith(commandBotName)
-                ? signal.MutateMessage(message => message
-                    .MutateText(text => text
-                        ?.TrimStart()
-                        .Substring(commandBotName.Length)
-                        .TrimStart()))
+                ? signal.Message.Mutate(message => message
+                        .MutateText(text => text
+                            ?.TrimStart()
+                            .Substring(commandBotName.Length)
+                            .TrimStart()))
+                    .ToSignal()
                 : false;
         });
 
@@ -120,9 +120,9 @@ public static class MessagesExtensions
     {
         return context.Signal.Message.SenderProfile.Language switch
         {
-            "en" => LocalizationProvider.English,
-            "ru" or "be" => LocalizationProvider.Russian,
-            "uk" => LocalizationProvider.Ukrainian,
+            Language.English => LocalizationProvider.English,
+            Language.Russian or Language.Belarusian => LocalizationProvider.Russian,
+            Language.Ukrainian => LocalizationProvider.Ukrainian,
             _ => LocalizationProvider.Default
         };
     }

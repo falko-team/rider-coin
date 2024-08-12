@@ -3,6 +3,7 @@ using Falko.Coin.Wallets.Services;
 using Talkie.Controllers;
 using Talkie.Flows;
 using Talkie.Handlers;
+using Talkie.Pipelines;
 using Talkie.Pipelines.Handling;
 using Talkie.Signals;
 
@@ -32,23 +33,23 @@ public sealed class WalletSubscriptor(IWalletsPool wallets, ILogger<BalanceSubsc
             logger.LogInformation($"User with {context.Signal.Message.SenderProfile.Identifier} has wallet with identifier {wallet.Identifier}");
 
             await context
-                .ToMessageController()
+                .ToOutgoingMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletIsMissing
                     .WithSenderProfileUser(context)
-                    .WithWalletAddress(wallet), cancellationToken);
+                    .WithWalletAddress(wallet), cancellationToken: cancellationToken);
         }
         else
         {
             logger.LogWarning($"User with {context.Signal.Message.SenderProfile.Identifier} has no wallet");
 
             await context
-                .ToMessageController()
+                .ToOutgoingMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletIsMissing
-                    .WithSenderProfileUser(context), cancellationToken);
+                    .WithSenderProfileUser(context), cancellationToken: cancellationToken);
         }
     }
 }
