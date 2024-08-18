@@ -4,6 +4,7 @@ using Talkie.Common;
 using Talkie.Controllers.OutgoingMessageControllers;
 using Talkie.Flows;
 using Talkie.Handlers;
+using Talkie.Models.Messages;
 using Talkie.Models.Profiles;
 using Talkie.Pipelines.Handling;
 using Talkie.Pipelines.Intercepting;
@@ -27,7 +28,7 @@ public sealed class StartOrCreateSubscriptor(IWalletsPool wallets, ILogger<Start
                 mergeSignals => mergeSignals
                     .SelectOnlyCommand("create", logger)
             )
-            .Where(signal => signal.Message.Content.Text.IsNullOrEmpty())
+            .Where(signal => signal.Message.GetText().IsNullOrEmpty())
             .HandleAsync(TryCreateProfileWallet));
     }
 

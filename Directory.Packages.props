@@ -1,6 +1,6 @@
 <Project>
     <PropertyGroup Label="Versions">
-        <TalkieVersion>1.6.0.101-alpha</TalkieVersion>
+        <TalkieVersion>1.6.0.102-alpha</TalkieVersion>
         <MicrosoftVersion>8.0.0</MicrosoftVersion>
     </PropertyGroup>
 

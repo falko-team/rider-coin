@@ -4,6 +4,7 @@ using Falko.Coin.Wallets.Transactions;
 using Talkie.Controllers.OutgoingMessageControllers;
 using Talkie.Flows;
 using Talkie.Handlers;
+using Talkie.Models.Messages;
 using Talkie.Pipelines.Handling;
 using Talkie.Pipelines.Intercepting;
 using Talkie.Signals;
@@ -19,7 +20,7 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
             .SkipSelfSent()
             .SkipOlderThan(TimeSpan.FromMinutes(1))
             .SelectOnlyCommand("transfer")
-            .Do(signal => logger.LogDebug($"Transfer command text: {signal.Message.Content.Text}"))
+            .Do(signal => logger.LogDebug($"Transfer command text: {signal.Message.GetText()}"))
             .HandleAsync(TryTransferProfileWalletAmountToOther));
     }
 

@@ -1,6 +1,7 @@
 using Falko.Coin.Bot.Localizations;
 using Talkie.Handlers;
 using Talkie.Localizations;
+using Talkie.Models.Messages;
 using Talkie.Models.Messages.Contents;
 using Talkie.Models.Profiles;
 using Talkie.Pipelines.Intercepting;
@@ -32,7 +33,7 @@ public static class MessagesExtensions
 
         var pipeline = builder.Intercept(signal =>
         {
-            var messageText = signal.Message.Content.Text.TrimStart().ToLowerInvariant();
+            var messageText = signal.Message.GetText().TrimStart().ToLowerInvariant();
 
             if (messageText.Length is 0) return false;
 

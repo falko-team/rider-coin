@@ -3,6 +3,7 @@ using Falko.Coin.Wallets.Services;
 using Talkie.Controllers.OutgoingMessageControllers;
 using Talkie.Flows;
 using Talkie.Handlers;
+using Talkie.Models.Messages;
 using Talkie.Pipelines.Intercepting;
 using Talkie.Pipelines.Handling;
 using Talkie.Signals;
@@ -18,7 +19,7 @@ public sealed class BalanceSubscriptor(IWalletsPool wallets, ILogger<BalanceSubs
             .SkipSelfSent()
             .SkipOlderThan(TimeSpan.FromMinutes(1))
             .SelectOnlyCommand("balance", logger)
-            .Do(signal => logger.LogDebug($"Balance command text: {signal.Message.Content.Text}"))
+            .Do(signal => logger.LogDebug($"Balance command text: {signal.Message.GetText()}"))
             .HandleAsync(SendProfileBalance));
     }
 
