@@ -1,11 +1,10 @@
 using Falko.Coin.Bot.Extensions;
 using Falko.Coin.Wallets.Services;
-using Talkie.Controllers;
+using Talkie.Controllers.OutgoingMessageControllers;
 using Talkie.Flows;
 using Talkie.Handlers;
-using Talkie.Pipelines;
-using Talkie.Pipelines.Handling;
 using Talkie.Pipelines.Intercepting;
+using Talkie.Pipelines.Handling;
 using Talkie.Signals;
 
 namespace Falko.Coin.Bot.Subscriptors;
@@ -16,9 +15,10 @@ public sealed class BalanceSubscriptor(IWalletsPool wallets, ILogger<BalanceSubs
     public void Subscribe(ISignalFlow flow)
     {
         flow.Subscribe<IncomingMessageSignal>(signals => signals
+            .SkipSelfSent()
             .SkipOlderThan(TimeSpan.FromMinutes(1))
             .SelectOnlyCommand("balance", logger)
-            .Do(signal => logger.LogDebug($"Balance command text: {signal.Message.Text}"))
+            .Do(signal => logger.LogDebug($"Balance command text: {signal.Message.Content.Text}"))
             .HandleAsync(SendProfileBalance));
     }
 
@@ -40,7 +40,7 @@ public sealed class BalanceSubscriptor(IWalletsPool wallets, ILogger<BalanceSubs
                     .GetLocalization()
                     .WalletBalance
                     .WithWalletBalance(wallet)
-                    .WithSenderProfileUser(context), cancellationToken: cancellationToken);
+                    .WithSenderProfileUser(context), cancellationToken);
         }
         else
         {
@@ -51,7 +51,7 @@ public sealed class BalanceSubscriptor(IWalletsPool wallets, ILogger<BalanceSubs
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletIsMissing
-                    .WithSenderProfileUser(context), cancellationToken: cancellationToken);
+                    .WithSenderProfileUser(context), cancellationToken);
         }
     }
 }

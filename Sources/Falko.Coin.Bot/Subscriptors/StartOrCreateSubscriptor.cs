@@ -1,11 +1,10 @@
 using Falko.Coin.Bot.Extensions;
 using Falko.Coin.Wallets.Services;
 using Talkie.Common;
-using Talkie.Controllers;
+using Talkie.Controllers.OutgoingMessageControllers;
 using Talkie.Flows;
 using Talkie.Handlers;
 using Talkie.Models.Profiles;
-using Talkie.Pipelines;
 using Talkie.Pipelines.Handling;
 using Talkie.Pipelines.Intercepting;
 using Talkie.Signals;
@@ -18,6 +17,7 @@ public sealed class StartOrCreateSubscriptor(IWalletsPool wallets, ILogger<Start
     public void Subscribe(ISignalFlow flow)
     {
         flow.Subscribe<IncomingMessageSignal>(signals => signals
+            .SkipSelfSent()
             .SkipOlderThan(TimeSpan.FromMinutes(1))
             .Merge
             (
@@ -27,7 +27,7 @@ public sealed class StartOrCreateSubscriptor(IWalletsPool wallets, ILogger<Start
                 mergeSignals => mergeSignals
                     .SelectOnlyCommand("create", logger)
             )
-            .Where(signal => signal.Message.Text.IsNullOrEmpty())
+            .Where(signal => signal.Message.Content.Text.IsNullOrEmpty())
             .HandleAsync(TryCreateProfileWallet));
     }
 
@@ -48,7 +48,7 @@ public sealed class StartOrCreateSubscriptor(IWalletsPool wallets, ILogger<Start
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletIsExists
-                    .WithWalletAddress(wallet), cancellationToken: cancellationToken);
+                    .WithWalletAddress(wallet), cancellationToken);
         }
         else
         {
@@ -71,7 +71,7 @@ public sealed class StartOrCreateSubscriptor(IWalletsPool wallets, ILogger<Start
                     .GetLocalization()
                     .WalletIsCreated
                     .WithWalletAddress(wallet!)
-                    .WithSenderProfileUser(context), cancellationToken: cancellationToken);
+                    .WithSenderProfileUser(context), cancellationToken);
         }
     }
 }

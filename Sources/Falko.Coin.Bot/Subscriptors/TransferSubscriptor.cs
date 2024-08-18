@@ -1,10 +1,9 @@
 using Falko.Coin.Bot.Extensions;
 using Falko.Coin.Wallets.Services;
 using Falko.Coin.Wallets.Transactions;
-using Talkie.Controllers;
+using Talkie.Controllers.OutgoingMessageControllers;
 using Talkie.Flows;
 using Talkie.Handlers;
-using Talkie.Pipelines;
 using Talkie.Pipelines.Handling;
 using Talkie.Pipelines.Intercepting;
 using Talkie.Signals;
@@ -17,9 +16,10 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
     public void Subscribe(ISignalFlow flow)
     {
         flow.Subscribe<IncomingMessageSignal>(signals => signals
+            .SkipSelfSent()
             .SkipOlderThan(TimeSpan.FromMinutes(1))
             .SelectOnlyCommand("transfer")
-            .Do(signal => logger.LogDebug($"Transfer command text: {signal.Message.Text}"))
+            .Do(signal => logger.LogDebug($"Transfer command text: {signal.Message.Content.Text}"))
             .HandleAsync(TryTransferProfileWalletAmountToOther));
     }
 
@@ -40,7 +40,8 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletIsMissing
-                    .WithSenderProfileUser(context), cancellationToken: cancellationToken);
+                    .WithSenderProfileUser(context)
+                    .Build(), cancellationToken);
 
             return;
         }
@@ -55,7 +56,7 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
                 .ToOutgoingMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
-                    .RequiredAmountAndWalletAddress, cancellationToken: cancellationToken);
+                    .RequiredAmountAndWalletAddress, cancellationToken);
 
             return;
         }
@@ -69,7 +70,7 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletIsMissing
-                    .WithAmount(commandArguments[0]), cancellationToken: cancellationToken);
+                    .WithAmount(commandArguments[0]), cancellationToken);
 
             return;
         }
@@ -83,7 +84,7 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletAddressIsInvalid
-                    .WithAddress(commandArguments[1]), cancellationToken: cancellationToken);
+                    .WithAddress(commandArguments[1]), cancellationToken);
 
             return;
         }
@@ -97,7 +98,7 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletAddressIsMissing
-                    .WithAddress(recipientWalletIdentifier), cancellationToken: cancellationToken);
+                    .WithAddress(recipientWalletIdentifier), cancellationToken);
 
             return;
         }
@@ -111,7 +112,7 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletBalanceTooLow
-                    .WithSenderProfileUser(context), cancellationToken: cancellationToken);
+                    .WithSenderProfileUser(context), cancellationToken);
 
             return;
         }
@@ -121,7 +122,7 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
             .PublishMessageAsync(context
                 .GetLocalization()
                 .TransactionProcessing
-                .WithSenderProfileUser(context), cancellationToken: cancellationToken);
+                .WithSenderProfileUser(context), cancellationToken);
 
         logger.LogInformation($"User with {context.Signal.Message.SenderProfile.Identifier} transferred {amount} to {recipientWallet.Identifier}");
 
@@ -132,7 +133,7 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
                 .TransactionProcessed
                 .WithSenderProfileUser(context)
                 .WithWalletAddress(recipientWallet)
-                .WithAmount(amount), cancellationToken: cancellationToken);
+                .WithAmount(amount), cancellationToken);
 
         try
         {
@@ -142,7 +143,7 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
                     .GetLocalization()
                     .TransactionSent
                     .WithWalletAddress(recipientWallet)
-                    .WithAmount(amount), cancellationToken: cancellationToken);
+                    .WithAmount(amount), cancellationToken);
         }
         catch (Exception exception)
         {
@@ -157,7 +158,7 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
                     .GetLocalization()
                     .TransactionReceived
                     .WithWalletAddress(recipientWallet)
-                    .WithAmount(amount), cancellationToken: cancellationToken);
+                    .WithAmount(amount), cancellationToken);
         }
         catch (Exception exception)
         {

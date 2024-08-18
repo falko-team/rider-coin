@@ -1,4 +1,5 @@
 using System.Text;
+using Talkie.Models.Messages.Contents;
 
 namespace Falko.Coin.Bot.Localizations;
 
@@ -27,6 +28,8 @@ public sealed class StringWithMetadataBuilder(StringBuilder builder)
     }
 
     public static implicit operator string(StringWithMetadataBuilder builder) => builder.Build();
+
+    public static implicit operator MessageContent(StringWithMetadataBuilder builder) => builder.Build();
 
     public static implicit operator StringWithMetadataBuilder(StringBuilder builder) => new(builder);
 
