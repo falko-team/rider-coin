@@ -1,5 +1,4 @@
 using System.Collections.Specialized;
-using Talkie.Validations;
 
 namespace Falko.Coin.Bot.Localizations;
 
@@ -24,7 +23,7 @@ public static class LocalizationProvider
 
     public static ILocalization GetLocalizationByLanguageName(string languageName)
     {
-        languageName.ThrowIf().NullOrWhiteSpace();
+        ArgumentException.ThrowIfNullOrWhiteSpace(languageName, nameof(languageName));
 
         return ((Lazy<ILocalization>)Localizations[languageName.ToLowerInvariant()]!).Value;
     }

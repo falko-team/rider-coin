@@ -1,13 +1,15 @@
 <Project>
     <PropertyGroup Label="Versions">
-        <TalkieVersion>1.6.0.102-alpha</TalkieVersion>
-        <MicrosoftVersion>8.0.0</MicrosoftVersion>
+        <TalkieVersion>1.8.0</TalkieVersion>
+        <MicrosoftVersion>9.0.0</MicrosoftVersion>
     </PropertyGroup>
 
     <ItemGroup Label="Dependencies">
+        <PackageVersion Include="Falko.Talkie.Microsoft.Hosting" Version="$(TalkieVersion)" />
         <PackageVersion Include="Falko.Talkie.Platforms.Telegram" Version="$(TalkieVersion)" />
         <PackageVersion Include="Falko.Talkie.Core" Version="$(TalkieVersion)" />
-        <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftVersion)" />
-        <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftVersion)" />
+        <PackageVersion Include="Serilog" Version="4.1.0" />
+        <PackageVersion Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+        <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
     </ItemGroup>
 </Project>

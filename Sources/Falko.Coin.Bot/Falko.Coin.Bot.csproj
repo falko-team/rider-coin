@@ -11,8 +11,10 @@
 
     <ItemGroup Label="Dependencies">
         <PackageReference Include="Falko.Talkie.Platforms.Telegram" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Console" />
+        <PackageReference Include="Falko.Talkie.Microsoft.Hosting" />
+        <PackageReference Include="Serilog" />
+        <PackageReference Include="Serilog.Extensions.Hosting" />
+        <PackageReference Include="Serilog.Sinks.Console" />
         <ProjectReference Include="..\Falko.Coin.Wallets\Falko.Coin.Wallets.csproj" />
     </ItemGroup>
 </Project>

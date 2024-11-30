@@ -1,11 +1,10 @@
 using Falko.Coin.Wallets.Wallets;
-using Talkie.Validations;
 
 namespace Falko.Coin.Wallets.Storages;
 
 public sealed class WalletsStorage : IWalletsStorage
 {
-    private readonly object _locker = new();
+    private readonly Lock _locker = new();
 
     private readonly string _directory;
 
@@ -18,7 +17,7 @@ public sealed class WalletsStorage : IWalletsStorage
 
     public void Write(IWallet wallet)
     {
-        wallet.ThrowIf().Null();
+        ArgumentNullException.ThrowIfNull(wallet, nameof(wallet));
 
         var file = GetWalletPath(wallet.Identifier);
 

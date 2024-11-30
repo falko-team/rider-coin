@@ -8,10 +8,10 @@ public static class ProfilesExtensions
     {
         return profile switch
         {
-            IUserProfile { NickName: not null } user => $"@_{user.NickName}",
+            IUserProfile { NickName: not null } user => $"@{user.NickName}",
             IUserProfile { FirstName: not null } user => user.FirstName,
 
-            IChatProfile { NickName: not null } chat => $"@_{chat.NickName}",
+            IChatProfile { NickName: not null } chat => $"@{chat.NickName}",
             IChatProfile { Title: not null } chat => chat.Title,
 
             _ => profile.Identifier.ToString()

@@ -7,7 +7,7 @@ namespace Falko.Coin.Wallets.Services;
 
 public sealed class WalletsPool(IWalletsStorage walletsStorage) : IWalletsPool
 {
-    private readonly object _locker = new();
+    private readonly Lock _locker = new();
 
     private readonly ConcurrentDictionary<long, PooledWallet> _wallets = new();
 

@@ -1,4 +1,5 @@
 using Falko.Coin.Bot.Localizations;
+using Microsoft.Extensions.Logging;
 using Talkie.Handlers;
 using Talkie.Localizations;
 using Talkie.Models.Messages;
@@ -6,30 +7,33 @@ using Talkie.Models.Messages.Contents;
 using Talkie.Models.Profiles;
 using Talkie.Pipelines.Intercepting;
 using Talkie.Signals;
-using Talkie.Validations;
 
 namespace Falko.Coin.Bot.Extensions;
 
 public static class MessagesExtensions
 {
-    public static bool TryGetWalletIdentifier(this ISignalContext<IncomingMessageSignal> context, out long walletIdentifier,
+    public static bool TryGetWalletIdentifier(this ISignalContext<MessagePublishedSignal> context, out long walletIdentifier,
         ILogger? logger = null)
     {
-        var result = context.Signal.Message.SenderProfile.Identifier.TryGetValue(out walletIdentifier);
+        var result = context.Signal.Message.PublisherProfile.Identifier.TryGetValue(out walletIdentifier);
 
         if (result is false)
         {
-            logger?.LogWarning($"User with {context.Signal.Message.SenderProfile.Identifier} has no wallet identifier");
+            logger?.LogWarning
+            (
+                "User with {Publisher} has no wallet",
+                context.Signal.Message.PublisherProfile.Identifier
+            );
         }
 
         return result;
     }
 
-    public static ISignalInterceptingPipelineBuilder<IncomingMessageSignal> SelectOnlyCommand(this ISignalInterceptingPipelineBuilder<IncomingMessageSignal> builder,
+    public static ISignalInterceptingPipelineBuilder<MessagePublishedSignal> SelectOnlyCommand(this ISignalInterceptingPipelineBuilder<MessagePublishedSignal> builder,
         string name,
         ILogger? logger = null)
     {
-        name.ThrowIf().NullOrWhiteSpace();
+        ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
 
         var pipeline = builder.Intercept(signal =>
         {
@@ -96,14 +100,18 @@ public static class MessagesExtensions
 
         if (logger is not null)
         {
-            pipeline = pipeline.Do(signal => logger
-                .LogDebug($"User with {signal.Message.SenderProfile.Identifier} invoked command /{name}"));
+            pipeline = pipeline.Do(signal => logger.LogDebug
+            (
+                "User with {Publisher} invoked command {Command}",
+                signal.Message.PublisherProfile.Identifier,
+                name
+            ));
         }
 
         return pipeline;
     }
 
-    public static IReadOnlyList<string> GetCommandArguments(this ISignalContext<IncomingMessageSignal> context)
+    public static IReadOnlyList<string> GetCommandArguments(this ISignalContext<MessagePublishedSignal> context)
     {
         const char space = ' ';
 
@@ -122,9 +130,9 @@ public static class MessagesExtensions
             .ToArray();
     }
 
-    public static ILocalization GetLocalization(this ISignalContext<IncomingMessageSignal> context)
+    public static ILocalization GetLocalization(this ISignalContext<MessagePublishedSignal> context)
     {
-        return context.Signal.Message.SenderProfile.Language switch
+        return context.Signal.Message.PublisherProfile.Language switch
         {
             Language.English => LocalizationProvider.English,
             Language.Russian or Language.Belarusian => LocalizationProvider.Russian,

@@ -1,7 +1,9 @@
 using Falko.Coin.Bot.Extensions;
 using Falko.Coin.Wallets.Services;
+using Microsoft.Extensions.Logging;
 using Talkie.Common;
-using Talkie.Controllers.OutgoingMessageControllers;
+using Talkie.Controllers.MessageControllers;
+using Talkie.Disposables;
 using Talkie.Flows;
 using Talkie.Handlers;
 using Talkie.Models.Messages;
@@ -9,16 +11,22 @@ using Talkie.Models.Profiles;
 using Talkie.Pipelines.Handling;
 using Talkie.Pipelines.Intercepting;
 using Talkie.Signals;
+using Talkie.Subscribers;
 
-namespace Falko.Coin.Bot.Subscriptors;
+namespace Falko.Coin.Bot.Behaviors;
 
 // ReSharper disable once ClassNeverInstantiated.Global
-public sealed class StartOrCreateSubscriptor(IWalletsPool wallets, ILogger<StartOrCreateSubscriptor> logger) : ISubscriptor
+public sealed class StartOrCreateSubscriber(IWalletsPool wallets, ILogger<StartOrCreateSubscriber> logger) : IBehaviorsSubscriber
 {
-    public void Subscribe(ISignalFlow flow)
+    public void Subscribe
+    (
+        ISignalFlow flow,
+        IRegisterOnlyDisposableScope disposables,
+        CancellationToken cancellationToken
+    )
     {
-        flow.Subscribe<IncomingMessageSignal>(signals => signals
-            .SkipSelfSent()
+        flow.Subscribe<MessagePublishedSignal>(signals => signals
+            .SkipSelfPublished()
             .SkipOlderThan(TimeSpan.FromMinutes(1))
             .Merge
             (
@@ -32,8 +40,11 @@ public sealed class StartOrCreateSubscriptor(IWalletsPool wallets, ILogger<Start
             .HandleAsync(TryCreateProfileWallet));
     }
 
-    private async ValueTask TryCreateProfileWallet(ISignalContext<IncomingMessageSignal> context,
-        CancellationToken cancellationToken)
+    private async ValueTask TryCreateProfileWallet
+    (
+        ISignalContext<MessagePublishedSignal> context,
+        CancellationToken cancellationToken
+    )
     {
         if (context.TryGetWalletIdentifier(out var walletIdentifier, logger) is false)
         {
@@ -42,18 +53,28 @@ public sealed class StartOrCreateSubscriptor(IWalletsPool wallets, ILogger<Start
 
         if (wallets.TryGet(walletIdentifier, out var wallet))
         {
-            logger.LogInformation($"User with {context.Signal.Message.SenderProfile.Identifier} has wallet with identifier {wallet.Identifier}");
+            logger.LogInformation
+            (
+                "User with {Publisher} has wallet with identifier {WalletIdentifier}",
+                context.Signal.Message.PublisherProfile.Identifier,
+                wallet.Identifier
+            );
 
             await context
-                .ToOutgoingMessageController()
+                .ToMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletIsExists
-                    .WithWalletAddress(wallet), cancellationToken);
+                    .WithWalletAddress(wallet)
+                    .WithUserPublisherProfile(context), cancellationToken);
         }
         else
         {
-            logger.LogWarning($"User with {context.Signal.Message.SenderProfile.Identifier} has no wallet");
+            logger.LogWarning
+            (
+                "User with {Publisher} has no wallet",
+                context.Signal.Message.PublisherProfile.Identifier
+            );
 
             if (wallets.TryAdd(walletIdentifier, out wallet))
             {
@@ -64,15 +85,19 @@ public sealed class StartOrCreateSubscriptor(IWalletsPool wallets, ILogger<Start
                 wallets.TryGet(walletIdentifier, out wallet);
             }
 
-            logger.LogInformation($"Created wallet with user identifier {walletIdentifier}");
+            logger.LogInformation
+            (
+                "Created wallet with user identifier {WalletIdentifier}",
+                walletIdentifier
+            );
 
             await context
-                .ToOutgoingMessageController()
+                .ToMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletIsCreated
                     .WithWalletAddress(wallet!)
-                    .WithSenderProfileUser(context), cancellationToken);
+                    .WithUserPublisherProfile(context), cancellationToken);
         }
     }
 }

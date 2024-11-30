@@ -1,31 +1,42 @@
 using Falko.Coin.Bot.Extensions;
 using Falko.Coin.Wallets.Services;
 using Falko.Coin.Wallets.Transactions;
-using Talkie.Controllers.OutgoingMessageControllers;
+using Microsoft.Extensions.Logging;
+using Talkie.Controllers.MessageControllers;
+using Talkie.Disposables;
 using Talkie.Flows;
 using Talkie.Handlers;
 using Talkie.Models.Messages;
 using Talkie.Pipelines.Handling;
 using Talkie.Pipelines.Intercepting;
 using Talkie.Signals;
+using Talkie.Subscribers;
 
-namespace Falko.Coin.Bot.Subscriptors;
+namespace Falko.Coin.Bot.Behaviors;
 
 // ReSharper disable once ClassNeverInstantiated.Global
-public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSubscriptor> logger) : ISubscriptor
+public sealed class TransferSubscriber(IWalletsPool wallets, ILogger<TransferSubscriber> logger) : IBehaviorsSubscriber
 {
-    public void Subscribe(ISignalFlow flow)
+    public void Subscribe
+    (
+        ISignalFlow flow,
+        IRegisterOnlyDisposableScope disposables,
+        CancellationToken cancellationToken
+    )
     {
-        flow.Subscribe<IncomingMessageSignal>(signals => signals
-            .SkipSelfSent()
+        flow.Subscribe<MessagePublishedSignal>(signals => signals
+            .SkipSelfPublished()
             .SkipOlderThan(TimeSpan.FromMinutes(1))
             .SelectOnlyCommand("transfer")
-            .Do(signal => logger.LogDebug($"Transfer command text: {signal.Message.GetText()}"))
+            .Do(signal => logger.LogDebug("Transfer command text: {Text}", signal.Message.GetText()))
             .HandleAsync(TryTransferProfileWalletAmountToOther));
     }
 
-    private async ValueTask TryTransferProfileWalletAmountToOther(ISignalContext<IncomingMessageSignal> context,
-        CancellationToken cancellationToken)
+    private async ValueTask TryTransferProfileWalletAmountToOther
+    (
+        ISignalContext<MessagePublishedSignal> context,
+        CancellationToken cancellationToken
+    )
     {
         if (context.TryGetWalletIdentifier(out var walletIdentifier, logger) is false)
         {
@@ -34,15 +45,18 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
 
         if (wallets.TryGet(walletIdentifier, out var wallet) is false)
         {
-            logger.LogWarning($"User with {context.Signal.Message.SenderProfile.Identifier} has no wallet");
+            logger.LogWarning
+            (
+                "User with {Publisher} has no wallet",
+                context.Signal.Message.PublisherProfile.Identifier
+            );
 
             await context
-                .ToOutgoingMessageController()
+                .ToMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletIsMissing
-                    .WithSenderProfileUser(context)
-                    .Build(), cancellationToken);
+                    .WithUserPublisherProfile(context), cancellationToken);
 
             return;
         }
@@ -51,10 +65,14 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
 
         if (commandArguments.Count < 2)
         {
-            logger.LogWarning($"User with {context.Signal.Message.SenderProfile.Identifier} has no command arguments");
+            logger.LogWarning
+            (
+                "User with {Publisher} has no command arguments",
+                context.Signal.Message.PublisherProfile.Identifier
+            );
 
             await context
-                .ToOutgoingMessageController()
+                .ToMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .RequiredAmountAndWalletAddress, cancellationToken);
@@ -64,10 +82,14 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
 
         if (long.TryParse(commandArguments[0], out var amount) is false)
         {
-            logger.LogWarning($"User with {context.Signal.Message.SenderProfile.Identifier} has invalid amount");
+            logger.LogWarning
+            (
+                "User with {Publisher} has invalid amount",
+                context.Signal.Message.PublisherProfile.Identifier
+            );
 
             await context
-                .ToOutgoingMessageController()
+                .ToMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletIsMissing
@@ -78,10 +100,14 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
 
         if (long.TryParse(commandArguments[1], out var recipientWalletIdentifier) is false)
         {
-            logger.LogWarning($"User with {context.Signal.Message.SenderProfile.Identifier} has invalid recipient wallet identifier");
+            logger.LogWarning
+            (
+                "User with {Publisher} has invalid recipient wallet identifier",
+                context.Signal.Message.PublisherProfile.Identifier
+            );
 
             await context
-                .ToOutgoingMessageController()
+                .ToMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletAddressIsInvalid
@@ -92,10 +118,14 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
 
         if (wallets.TryGet(recipientWalletIdentifier, out var recipientWallet) is false)
         {
-            logger.LogWarning($"User with {context.Signal.Message.SenderProfile.Identifier} has no recipient wallet");
+            logger.LogWarning
+            (
+                "User with {Publisher} has no recipient wallet",
+                context.Signal.Message.PublisherProfile.Identifier
+            );
 
             await context
-                .ToOutgoingMessageController()
+                .ToMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletAddressIsMissing
@@ -106,40 +136,57 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
 
         if (WalletTransaction.TryTransfer(wallet, recipientWallet, amount) is false)
         {
-            logger.LogWarning($"User with {context.Signal.Message.SenderProfile.Identifier} has not enough money");
+            logger.LogWarning
+            (
+                "User with {Publisher} has not enough money",
+                context.Signal.Message.PublisherProfile.Identifier
+            );
 
             await context
-                .ToOutgoingMessageController()
+                .ToMessageController()
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .WalletBalanceTooLow
-                    .WithSenderProfileUser(context), cancellationToken);
+                    .WithUserPublisherProfile(context), cancellationToken);
 
             return;
         }
 
         await context
-            .ToOutgoingMessageController()
+            .ToMessageController()
             .PublishMessageAsync(context
                 .GetLocalization()
                 .TransactionProcessing
-                .WithSenderProfileUser(context), cancellationToken);
+                .WithUserPublisherProfile(context), cancellationToken);
 
-        logger.LogInformation($"User with {context.Signal.Message.SenderProfile.Identifier} transferred {amount} to {recipientWallet.Identifier}");
-
-        await context
-            .ToOutgoingMessageController()
-            .PublishMessageAsync(context
-                .GetLocalization()
-                .TransactionProcessed
-                .WithSenderProfileUser(context)
-                .WithWalletAddress(recipientWallet)
-                .WithAmount(amount), cancellationToken);
+        logger.LogInformation
+        (
+            "User with {Publisher} transferred {Amount} to {RecipientWalletIdentifier}",
+            context.Signal.Message.PublisherProfile.Identifier,
+            amount,
+            recipientWallet.Identifier
+        );
 
         try
         {
             await context
-                .GetOutgoingMessageController(walletIdentifier)
+                .ToMessageController()
+                .PublishMessageAsync(context
+                    .GetLocalization()
+                    .TransactionProcessed
+                    .WithUserPublisherProfile(context)
+                    .WithWalletAddress(recipientWallet)
+                    .WithAmount(amount), cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Failed to notify sender about transfer");
+        }
+
+        try
+        {
+            await context
+                .GetMessageController(walletIdentifier)
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .TransactionSent
@@ -154,7 +201,7 @@ public sealed class TransferSubscriptor(IWalletsPool wallets, ILogger<TransferSu
         try
         {
             await context
-                .GetOutgoingMessageController(recipientWalletIdentifier)
+                .GetMessageController(recipientWalletIdentifier)
                 .PublishMessageAsync(context
                     .GetLocalization()
                     .TransactionReceived

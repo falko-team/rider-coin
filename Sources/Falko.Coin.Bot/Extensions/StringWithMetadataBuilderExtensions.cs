@@ -21,18 +21,18 @@ public static class StringWithMetadataBuilderExtensions
             .Identifier);
     }
 
-    public static StringWithMetadataBuilder WithSenderProfileUser(this StringWithMetadataBuilder stringWithMetadataBuilder,
-        ISignalContext<IncomingMessageSignal> context)
+    public static StringWithMetadataBuilder WithUserPublisherProfile(this StringWithMetadataBuilder stringWithMetadataBuilder,
+        ISignalContext<MessagePublishedSignal> context)
     {
         return stringWithMetadataBuilder.WithUser(context
             .Signal
             .Message
-            .SenderProfile
+            .PublisherProfile
             .GetDisplayName());
     }
 
-    public static StringWithMetadataBuilder WithEnvironmentProfileBot(this StringWithMetadataBuilder stringWithMetadataBuilder,
-        ISignalContext<IncomingMessageSignal> context)
+    public static StringWithMetadataBuilder WithBotEnvironmentProfile(this StringWithMetadataBuilder stringWithMetadataBuilder,
+        ISignalContext<MessagePublishedSignal> context)
     {
         return stringWithMetadataBuilder.WithBot(context
             .Signal

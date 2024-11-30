@@ -1,5 +1,4 @@
 using Talkie.Common;
-using Talkie.Validations;
 
 namespace Falko.Coin.Bot.Configurations;
 
@@ -9,7 +8,7 @@ public static class BotConfiguration
     {
         var token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN");
 
-        token.ThrowIf()!.NullOrWhiteSpace();
+        ArgumentException.ThrowIfNullOrWhiteSpace(token, nameof(token));
 
         return token;
     }
