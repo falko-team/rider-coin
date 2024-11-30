@@ -12,8 +12,12 @@ namespace Falko.Coin.Bot.Extensions;
 
 public static class MessagesExtensions
 {
-    public static bool TryGetWalletIdentifier(this ISignalContext<MessagePublishedSignal> context, out long walletIdentifier,
-        ILogger? logger = null)
+    public static bool TryGetWalletIdentifier
+    (
+        this ISignalContext<MessagePublishedSignal> context,
+        out long walletIdentifier,
+        ILogger? logger = null
+    )
     {
         var result = context.Signal.Message.PublisherProfile.Identifier.TryGetValue(out walletIdentifier);
 
@@ -29,9 +33,12 @@ public static class MessagesExtensions
         return result;
     }
 
-    public static ISignalInterceptingPipelineBuilder<MessagePublishedSignal> SelectOnlyCommand(this ISignalInterceptingPipelineBuilder<MessagePublishedSignal> builder,
+    public static ISignalInterceptingPipelineBuilder<MessagePublishedSignal> SelectOnlyCommand
+    (
+        this ISignalInterceptingPipelineBuilder<MessagePublishedSignal> builder,
         string name,
-        ILogger? logger = null)
+        ILogger? logger = null
+    )
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
 
